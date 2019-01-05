@@ -67,8 +67,8 @@ external service.**
         ```
         **it is nearly always a good idea to support timeout
         and handle exception when using completable future**:
-            * `future -> future.orTimeout(500, TimeUnit.MILLISECONDS)`
-            * `future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex)`
+        * `future -> future.orTimeout(500, TimeUnit.MILLISECONDS)`
+        * `future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex)`
     * executors
         ```
         private Executor productThreadPool(int size) {
