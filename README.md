@@ -49,19 +49,19 @@ external service.**
 * `ProductService`
     * packing
         ```
-        List<String> pack(List<Integer> ids) {
-        
+        List<String> send(List<Integer> ids) {
+    
             var executors = productThreadPool(ids.size());
-        
-            var sendFutures = IntStream.range(1, 300)
-                    .mapToObj(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
+    
+            var sendFutures = ids.stream()
+                    .map(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
                     .map(product -> product.thenCompose(Packed.pack(by(executors))))
                     .map(packed -> packed.thenCompose(Send.send(by(executors))))
                     .map(send -> send.thenApply(Send::toString))
                     .map(future -> future.orTimeout(500, TimeUnit.MILLISECONDS))
                     .map(future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex))
                     .collect(toList());
-        
+    
             return sendFutures.stream()
                     .map(CompletableFuture::join)
                     .collect(toList());
