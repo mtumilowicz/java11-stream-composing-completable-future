@@ -35,7 +35,7 @@ class Send {
 
 class XXX {
     public static void main(String[] args) {
-        var futures = Stream.of(1, 2, 3, 4)
+        var sendFutures = Stream.of(1, 2, 3, 4)
                 .map(id -> CompletableFuture.supplyAsync(() -> new Product(id)))
                 .map(product -> product.thenCompose(Packed::pack))
                 .map(packed -> packed.thenCompose(Send::send))
@@ -44,7 +44,7 @@ class XXX {
                 .map(future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex))
                 .collect(toList());
 
-        futures.stream()
+        sendFutures.stream()
                 .map(CompletableFuture::join)
                 .forEach(System.out::println);
     }
