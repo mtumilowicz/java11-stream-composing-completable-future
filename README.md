@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/mtumilowicz/java11-stream-composing-completable-future.svg?branch=master)](https://travis-ci.com/mtumilowicz/java11-stream-composing-completable-future)
+
 # java11-stream-composing-completable-future
 Example of mixing stream with completable future using
 composition.
