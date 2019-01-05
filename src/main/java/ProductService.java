@@ -3,7 +3,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
@@ -12,12 +11,12 @@ import static java.util.stream.Collectors.toList;
  * Created by mtumilowicz by 2019-01-05.
  */
 class ProductService {
-    List<String> pack(List<Integer> ids) {
+    List<String> send(List<Integer> ids) {
 
         var executors = productThreadPool(ids.size());
 
-        var sendFutures = IntStream.range(1, 300)
-                .mapToObj(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
+        var sendFutures = ids.stream()
+                .map(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
                 .map(product -> product.thenCompose(Packed.pack(by(executors))))
                 .map(packed -> packed.thenCompose(Send.send(by(executors))))
                 .map(send -> send.thenApply(Send::toString))
