@@ -17,11 +17,11 @@ to perform operations:
 1. generate the report
 
 **Note that operation could be time consuming, for example
-getting product by its id could be provided by querying
+getting product by its id could be done by querying
 external service.**
 
 # solution
-* classes `Product`, `Packed` and `Send` as simple as they can be (with some utility functions):
+* classes `Product`, `Packed` and `Send` are as simple as they can be (with some utility functions):
     ```
     @Value
     class Product {
@@ -77,7 +77,7 @@ external service.**
             }
             ```
             **cons: weak error handling - we cannot customize message in a reasonable way** - for example 
-            we do not have access to the product id.
+            we do not have access to the product `id`.
         * `map` with composed `CompletableFuture`
             ```
             var executors = productThreadPool(ids.size());
@@ -96,6 +96,7 @@ external service.**
                     .collect(toList());
             ```
             **pros: we have direct access to id when it comes to error handling**
+            
         ** note that it is nearly always a good idea to support timeout
         and handle exception when using completable future**:
         * `future -> future.orTimeout(500, TimeUnit.MILLISECONDS)`
