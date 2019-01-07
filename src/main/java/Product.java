@@ -11,8 +11,9 @@ import java.util.function.Function;
 class Product {
     int id;
     
-    static Function<Integer, CompletableFuture<Product>> getProduct(Function<Integer, Product> productProvider) {
-        return id -> CompletableFuture.supplyAsync(() -> productProvider.apply(id));
+    static Function<Integer, CompletableFuture<Product>> getProduct(Function<Integer, Product> productProvider,
+                                                                    Executor executor) {
+        return id -> CompletableFuture.supplyAsync(() -> productProvider.apply(id), executor);
     }
 }
 

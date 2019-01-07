@@ -17,13 +17,13 @@ import static java.util.stream.Collectors.toList;
 class ProductService {
 
     private final Function<Integer, Product> productsProvider;
-    
+
     List<String> send(List<Integer> ids) {
 
         var executors = productThreadPool(ids.size());
 
         var sendFutures = ids.stream()
-                .map(id -> Product.getProduct(productsProvider).apply(id)
+                .map(id -> Product.getProduct(productsProvider, by(executors)).apply(id)
                         .thenCompose(Packed.pack(by(executors)))
                         .thenCompose(Send.send(by(executors)))
                         .thenApply(Send::asReport)
