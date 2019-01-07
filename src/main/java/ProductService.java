@@ -16,12 +16,12 @@ class ProductService {
         var executors = productThreadPool(ids.size());
 
         var sendFutures = ids.stream()
-                .map(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
-                .map(product -> product.thenCompose(Packed.pack(by(executors))))
-                .map(packed -> packed.thenCompose(Send.send(by(executors))))
-                .map(send -> send.thenApply(Send::toString))
-                .map(future -> future.orTimeout(500, TimeUnit.MILLISECONDS))
-                .map(future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex))
+                .map(id -> Product.getProduct(id)
+                        .thenCompose(Packed.pack(by(executors)))
+                        .thenCompose(Send.send(by(executors)))
+                        .thenApply(Send::toString)
+                        .orTimeout(500, TimeUnit.MILLISECONDS)
+                        .handle((ok, ex) -> nonNull(ok) ? ok : "FAILED with product = " + id + ": " + ex))
                 .collect(toList());
 
         return sendFutures.stream()

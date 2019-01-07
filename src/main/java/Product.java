@@ -10,6 +10,10 @@ import java.util.function.Function;
 @Value
 class Product {
     int id;
+    
+    static CompletableFuture<Product> getProduct(Integer id) {
+        return CompletableFuture.supplyAsync(() -> new Product(id));
+    }
 }
 
 @Value
