@@ -1,8 +1,11 @@
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
@@ -10,13 +13,17 @@ import static java.util.stream.Collectors.toList;
 /**
  * Created by mtumilowicz by 2019-01-05.
  */
+@RequiredArgsConstructor
 class ProductService {
+
+    private final Function<Integer, Product> productsProvider;
+    
     List<String> send(List<Integer> ids) {
 
         var executors = productThreadPool(ids.size());
 
         var sendFutures = ids.stream()
-                .map(id -> Product.getProduct(id)
+                .map(id -> Product.getProduct(productsProvider).apply(id)
                         .thenCompose(Packed.pack(by(executors)))
                         .thenCompose(Send.send(by(executors)))
                         .thenApply(Send::asReport)
