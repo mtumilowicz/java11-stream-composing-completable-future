@@ -21,6 +21,18 @@ getting product by its id could be done by querying
 external service.**
 
 # solution
+* `Delay`
+    ```
+    class Delay {
+        static void delay() {
+            try {
+                Thread.sleep(600);
+            } catch (InterruptedException e) {
+                // not used
+            }
+        }
+    }
+    ```
 * classes `Product`, `Packed` and `Send` are as simple as they can be (with some utility functions):
     ```
     @Value
