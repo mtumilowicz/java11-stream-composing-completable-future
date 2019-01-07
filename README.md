@@ -21,11 +21,15 @@ getting product by its id could be provided by querying
 external service.**
 
 # solution
-* classes `Product`, `Packed` and `Send` as simple as they can be:
+* classes `Product`, `Packed` and `Send` as simple as they can be (with some utility functions):
     ```
     @Value
     class Product {
         int id;
+        
+        static Function<Integer, CompletableFuture<Product>> getProduct(Function<Integer, Product> productProvider) {
+            return id -> CompletableFuture.supplyAsync(() -> productProvider.apply(id));
+        }
     }
     
     @Value
@@ -44,30 +48,55 @@ external service.**
         static Function<Packed, CompletableFuture<Send>> send(Executor executor) {
             return packed -> CompletableFuture.supplyAsync(() -> new Send(packed), executor);
         }
+        
+        String asReport() {
+            return "Successfully send: " + packed.toString();
+        }
     }
     ```
 * `ProductService`
-    * packing
-        ```
-        List<String> send(List<Integer> ids) {
-    
+    * packing (two approaches)
+        * sequence of `maps`
+            ```
+            List<String> send(List<Integer> ids) {
+        
+                var executors = productThreadPool(ids.size());
+        
+                var sendFutures = ids.stream()
+                        .map(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
+                        .map(product -> product.thenCompose(Packed.pack(by(executors))))
+                        .map(packed -> packed.thenCompose(Send.send(by(executors))))
+                        .map(send -> send.thenApply(Send::toString))
+                        .map(future -> future.orTimeout(500, TimeUnit.MILLISECONDS))
+                        .map(future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex))
+                        .collect(toList());
+        
+                return sendFutures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(toList());
+            }
+            ```
+            **cons: weak error handling - we cannot customize message in a reasonable way** - for example 
+            we do not have access to the product id.
+        * `map` with composed `CompletableFuture`
+            ```
             var executors = productThreadPool(ids.size());
-    
+            
             var sendFutures = ids.stream()
-                    .map(id -> CompletableFuture.supplyAsync(() -> new Product(id), executors))
-                    .map(product -> product.thenCompose(Packed.pack(by(executors))))
-                    .map(packed -> packed.thenCompose(Send.send(by(executors))))
-                    .map(send -> send.thenApply(Send::toString))
-                    .map(future -> future.orTimeout(500, TimeUnit.MILLISECONDS))
-                    .map(future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex))
+                    .map(id -> Product.getProduct(productsProvider).apply(id)
+                            .thenCompose(Packed.pack(by(executors)))
+                            .thenCompose(Send.send(by(executors)))
+                            .thenApply(Send::asReport)
+                            .orTimeout(500, TimeUnit.MILLISECONDS)
+                            .handle((ok, ex) -> nonNull(ok) ? ok : "FAILED with product = " + id + ": " + ex))
                     .collect(toList());
-    
+            
             return sendFutures.stream()
                     .map(CompletableFuture::join)
                     .collect(toList());
-        }
-        ```
-        **it is nearly always a good idea to support timeout
+            ```
+            **pros: we have direct access to id when it comes to error handling**
+        ** note that it is nearly always a good idea to support timeout
         and handle exception when using completable future**:
         * `future -> future.orTimeout(500, TimeUnit.MILLISECONDS)`
         * `future -> future.handle((ok, ex) -> nonNull(ok) ? ok : "FAILED: " + ex)`
