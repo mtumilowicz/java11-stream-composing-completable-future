@@ -19,6 +19,6 @@ public class ProductServiceTest {
         var sendProducts = productService.send(IntStream.rangeClosed(1, 500).boxed().collect(toList()));
         
         assertThat(sendProducts, hasSize(500));
-        assertTrue(sendProducts.stream().allMatch(report -> report.startsWith("Send(packed=Packed(product=Product")));
+        assertTrue(sendProducts.stream().allMatch(report -> report.startsWith("Successfully send")));
     }
 }

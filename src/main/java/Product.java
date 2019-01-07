@@ -32,4 +32,8 @@ class Send {
     static Function<Packed, CompletableFuture<Send>> send(Executor executor) {
         return packed -> CompletableFuture.supplyAsync(() -> new Send(packed), executor);
     }
+    
+    String asReport() {
+        return "Successfully send: " + packed.toString();
+    }
 }

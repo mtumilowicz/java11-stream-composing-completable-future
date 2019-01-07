@@ -19,7 +19,7 @@ class ProductService {
                 .map(id -> Product.getProduct(id)
                         .thenCompose(Packed.pack(by(executors)))
                         .thenCompose(Send.send(by(executors)))
-                        .thenApply(Send::toString)
+                        .thenApply(Send::asReport)
                         .orTimeout(500, TimeUnit.MILLISECONDS)
                         .handle((ok, ex) -> nonNull(ok) ? ok : "FAILED with product = " + id + ": " + ex))
                 .collect(toList());
